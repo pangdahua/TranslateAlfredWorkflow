@@ -5,18 +5,28 @@
 '''
 
 from utils import *
+from time import time
+import re
 
-API_KEY = 'AsIikT9sOqHyHzU6aiuBoOVg'
+APP_ID = ''
+SECRET_KEY = ''
+SALT = int(time())
 
 class BaiduTranslator():
     def translate(self, word):
-        apiUrl = 'http://openapi.baidu.com/public/2.0/bmt/translate?client_id=%s&q=%s&from=auto&to=auto' % (API_KEY, urlencode(word))
+        if re.match('[a-z]', word, re.I) is not None:
+            _from,to = 'en', 'zh'
+        else:
+            _from,to = 'zh', 'en'
+
+        apiUrl = 'http://api.fanyi.baidu.com/api/trans/vip/translate?from={0}&to={to}&q={word}&appid={appid}&salt={salt}&sign={sign}'.format(_from, to = to,word = word, appid = APP_ID,salt = SALT, sign = self._sign(SALT, word))
         resp = get(apiUrl)
         result = json_decode(resp)
         items = [(row['src'], row['dst'])for row in result['trans_result']]
 
         return items
-    
+    def _sign(self, salt, word):
+        return md5('%s%s%s%s' % (APP_ID, word, salt, SECRET_KEY))
 
 if __name__ == '__main__':
     import sys
